@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Intimidator MD — Session Generator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #000;
+    color: #fff;
+    display: flex; min-height: 100vh; align-items: center; justify-content: center;
+    margin: 0; padding: 1.5rem;
+    position: relative;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+    background-size: 42px 42px;
+    animation: drift 18s linear infinite;
+    z-index: 0;
+  }
+  @keyframes drift { from { background-position: 0 0; } to { background-position: 42px 42px; } }
+  .glow {
+    position: fixed; top: -20%; left: 50%; transform: translateX(-50%);
+    width: 600px; height: 600px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,.08), transparent 70%);
+    z-index: 0; pointer-events: none;
+    animation: pulse 5s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: .5; } 50% { opacity: 1; } }
+
+  .card {
+    position: relative; z-index: 1;
+    background: #0a0a0a; border: 1px solid #2a2a2a;
+    padding: 2.5rem; border-radius: 20px; max-width: 460px; width: 100%;
+    box-shadow: 0 0 60px rgba(255,255,255,.06), 0 20px 60px rgba(0,0,0,.8);
+  }
+  .brand { display: flex; align-items: center; gap: .6rem; margin-bottom: .3rem; }
+  .brand-mark {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: linear-gradient(135deg, #fff, #888);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; color: #000; font-size: 1.1rem;
+  }
+  h1 { font-size: 1.5rem; margin: 0; letter-spacing: .5px; font-weight: 800; }
+  .tagline { color: #888; font-size: .85rem; margin: .3rem 0 1.6rem; }
+  input {
+    width: 100%; padding: .9rem 1rem; border-radius: 12px; border: 1px solid #333;
+    background: #111; color: #fff; margin-bottom: .9rem; font-size: 1rem;
+    transition: border-color .2s;
+  }
+  input:focus { outline: none; border-color: #fff; }
+  button {
+    width: 100%; padding: .9rem; border-radius: 12px; border: none;
+    background: #fff; color: #000; font-size: 1rem;
+    cursor: pointer; font-weight: 700; transition: transform .1s, opacity .2s;
+    letter-spacing: .3px;
+  }
+  button:hover { opacity: .85; }
+  button:active { transform: scale(.98); }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  button.secondary { background: transparent; color: #fff; border: 1px solid #444; }
+  .code {
+    font-size: 2.4rem; letter-spacing: 6px; text-align: center;
+    background: #111; padding: 1.2rem; border-radius: 14px; margin: 1.2rem 0;
+    border: 1px solid #333; color: #fff; font-weight: 800;
+    animation: glow-pulse 2s ease-in-out infinite;
+  }
+  @keyframes glow-pulse {
+    0%,100% { box-shadow: 0 0 0 rgba(255,255,255,0); }
+    50% { box-shadow: 0 0 24px rgba(255,255,255,.15); }
+  }
+  textarea {
+    width: 100%; height: 120px; background: #111; color: #eee;
+    border: 1px solid #333; border-radius: 12px; padding: .8rem;
+    font-size: .78rem; word-break: break-all; margin-bottom: .7rem;
+    font-family: 'Courier New', monospace;
+  }
+  .muted { color: #888; font-size: .85rem; line-height: 1.5; }
+  .step { display: none; }
+  .step.active { display: block; animation: fadeIn .35s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .repo-link {
+    display: block; margin-top: .9rem; font-size: .82rem; color: #fff;
+    text-decoration: none; word-break: break-all; border-top: 1px solid #222;
+    padding-top: .8rem;
+  }
+  .repo-link:hover { text-decoration: underline; }
+  .spinner {
+    width: 14px; height: 14px; border: 2px solid #333; border-top-color: #fff;
+    border-radius: 50%; display: inline-block; animation: spin .8s linear infinite;
+    vertical-align: middle; margin-right: .5rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .footer-note { text-align: center; margin-top: 1.2rem; color: #555; font-size: .72rem; }
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<div class="card">
+  <div class="brand">
+    <div class="brand-mark">I</div>
+    <h1>INTIMIDATOR MD</h1>
+  </div>
+  <p class="tagline">Session generator — link WhatsApp, get your key, deploy.</p>
+
+  <div id="step-phone" class="step active">
+    <p class="muted">Enter your WhatsApp number with country code, no + or spaces.</p>
+    <input id="phone" placeholder="27691234567" inputmode="numeric" />
+    <button id="btn-request">Get Pairing Code</button>
+    <p id="err-phone" class="muted" style="color:#ff5c5c"></p>
+  </div>
+
+  <div id="step-code" class="step">
+    <p class="muted">Open WhatsApp → Linked Devices → Link a Device, then enter this code:</p>
+    <div class="code" id="pair-code">----</div>
+    <p class="muted"><span class="spinner"></span>Waiting for you to enter it on your phone...</p>
+  </div>
+
+  <div id="step-done" class="step">
+    <p class="muted">✅ Linked! Copy this session string into your bot's <code>SESSION_ID</code>:</p>
+    <textarea id="session-out" readonly></textarea>
+    <button id="btn-copy">📋 Copy to clipboard</button>
+    <a id="repo-link" class="repo-link" href="#" target="_blank" rel="noopener" style="display:none">📦 Bot repo →</a>
+    <p class="muted" style="margin-top:.8rem">Keep this private — it gives full access to your WhatsApp account. It's also been sent to your own WhatsApp inbox as a backup.</p>
+  </div>
+
+  <div id="step-error" class="step">
+    <p style="color:#ff5c5c" id="err-msg"></p>
+    <button id="btn-retry" class="secondary">Try again</button>
+  </div>
+</div>
+<p class="footer-note">INTIMIDATOR MD</p>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+document.getElementById('btn-request').addEventListener('click', async () => {
+  const phone = document.getElementById('phone').value.trim();
+  const errEl = document.getElementById('err-phone');
+  errEl.textContent = '';
+  if (!/^[0-9]{8,15}$/.test(phone)) {
+    errEl.textContent = 'Enter a valid number with country code, digits only.';
+    return;
+  }
+  document.getElementById('btn-request').disabled = true;
+  try {
+    const res = await fetch('/api/request-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Request failed');
+    poll(data.sessionKey);
+  } catch (e) {
+    document.getElementById('err-msg').textContent = e.message;
+    show('step-error');
+  }
+});
+
+document.getElementById('btn-retry').addEventListener('click', () => {
+  document.getElementById('btn-request').disabled = false;
+  show('step-phone');
+});
+
+document.getElementById('btn-copy').addEventListener('click', () => {
+  const ta = document.getElementById('session-out');
+  ta.select();
+  document.execCommand('copy');
+  const btn = document.getElementById('btn-copy');
+  const original = btn.textContent;
+  btn.textContent = '✅ Copied!';
+  setTimeout(() => { btn.textContent = original; }, 1500);
+});
+
+function poll(sessionKey) {
+  let misses = 0;
+  const interval = setInterval(async () => {
+    try {
+      const res = await fetch('/api/status/' + sessionKey);
+      if (!res.ok) {
+        misses++;
+        if (misses > 3) {
+          clearInterval(interval);
+          let msg = 'Lost track of this session — it may have expired.';
+          try { const errData = await res.json(); if (errData.error) msg = errData.error; } catch {}
+          document.getElementById('err-msg').textContent = msg;
+          show('step-error');
+        }
+        return;
+      }
+      misses = 0;
+      const data = await res.json();
+      if (data.status === 'code' && data.code) {
+        document.getElementById('pair-code').textContent = data.code;
+        show('step-code');
+      } else if (data.status === 'connected') {
+        clearInterval(interval);
+        document.getElementById('session-out').value = data.sessionId;
+        if (data.repoUrl) {
+          const link = document.getElementById('repo-link');
+          link.href = data.repoUrl;
+          link.textContent = '📦 ' + data.repoUrl;
+          link.style.display = 'block';
+        }
+        show('step-done');
+      } else if (data.status === 'error' || data.status === 'closed') {
+        clearInterval(interval);
+        document.getElementById('err-msg').textContent = data.error || 'Connection closed before linking finished.';
+        show('step-error');
+      }
+    } catch {
+      // transient network hiccup — keep polling
+    }
+  }, 2000);
+}
+</script>
+</body>
+</html>
